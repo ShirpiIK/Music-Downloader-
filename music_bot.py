@@ -20,7 +20,7 @@ def ask(prompt_text):
 def paginate_list(items, format_func, title):
     total = len(items)
     if total == 0:
-        print("❌ Edhuvum kedaikkala!")
+        print("❌ Nothing found!")
         return None
     
     page = 0
@@ -47,11 +47,11 @@ def paginate_list(items, format_func, title):
         elif choice.isdigit():
             idx = int(choice) - 1
             if 0 <= idx < total: return idx
-            else: print("❌ Thappana number!")
-        else: print("❌ Thappana choice!")
+            else: print("❌ Invalid number!")
+        else: print("❌ Invalid choice!")
 
 def get_quality_choice():
-    print("\n🎧 Audio Quality Choose Pannunga:")
+    print("\n🎧 Choose Audio Quality:")
     print("1. 128 kbps | 2. 160 kbps | 3. 192 kbps | 4. 256 kbps | 5. 320 kbps")
     q_choice = ask("Option (1-5) (Enter: B=Back, 0=Home): ")
     q_map = {'1': '128', '2': '160', '3': '192', '4': '256', '5': '320'}
@@ -80,7 +80,7 @@ def download_track(track, bitrate):
               f"--max-downloads 1 -o 'temp.mp3' '{search_query}'")
 
     if not os.path.exists("temp.mp3"):
-        print("⚠️ Exact Duration Match kedaikkala. Normal searching fallback...")
+        print("⚠️ Exact duration match not found. Using normal search fallback...")
         os.system(f"yt-dlp -x --audio-format mp3 --audio-quality {bitrate}k --max-downloads 1 -o 'temp.mp3' 'ytsearch1:{title} {artist} Topic'")
 
     final_path = f"{DOWNLOAD_PATH}/{title}_{bitrate}k.mp3"
@@ -88,7 +88,7 @@ def download_track(track, bitrate):
     os.system(f"termux-media-scan '{final_path}'")
     
     # Feature 2: Robust Lyrics (LRC) logic
-    print("🔍 Lyrics theduren...")
+    print("🔍 Searching for lyrics...")
     lrc_path = f"{DOWNLOAD_PATH}/{title}_{bitrate}k.lrc"
     try:
         lrc_data = requests.get("https://lrclib.net/api/search", params={"q": f"{title} {artist}"}).json()
@@ -105,21 +105,23 @@ def download_track(track, bitrate):
                 
             if found_lyrics:
                 os.system(f"termux-media-scan '{lrc_path}'")
-                print("📜 Lyrics save aagiduchu!")
+                print("📜 Lyrics saved successfully!")
             else:
-                print("⚠️ Lyrics DB-la kedaikkala.")
+                print("⚠️ Lyrics not found for this song in the database.")
+        else:
+            print("⚠️ Lyrics not found for this song in the database.")
     except Exception:
-        print("❌ Lyrics API Error.")
+        print("❌ Lyrics API Error. Skipping lyrics.")
 
     if os.path.exists("temp.mp3"): os.remove("temp.mp3")
     if os.path.exists("cover.jpg"): os.remove("cover.jpg")
     print(f"✅ Success! '{title}' downloaded.")
 
-# Feature 3: Smart Navigation Flow for Movies
+# Smart Navigation Flow for Movies
 def search_movie():
     while True:
         try:
-            movie_name = ask("\n🎬 Padam peru (Enter: B=Back, 0=Home): ")
+            movie_name = ask("\n🎬 Enter Movie Name (Enter: B=Back, 0=Home): ")
             data = requests.get(f"https://itunes.apple.com/search?term={movie_name}&entity=album&limit=50").json()
             albums = data['results']
             
@@ -143,16 +145,16 @@ def search_movie():
                             else:
                                 selections = [int(x.strip())-1 for x in dl_choice.split(',')]
                                 for s in selections: download_track(tracks[s], bitrate)
-                            return # Success aanadhum Home-kku poyidum
-                        except GoBack: pass # Album List-kku thirumbum
-                except GoBack: break # Movie search-kku thirumbum
-        except GoBack: return # Main menu-kku thirumbum
+                            return # Returns to Home after success
+                        except GoBack: pass # Returns to Album List
+                except GoBack: break # Returns to Movie search
+        except GoBack: return # Returns to Main menu
 
 # Smart Navigation Flow for Songs
 def search_song():
     while True:
         try:
-            song_name = ask("\n🎵 Paattu peru (Enter: B=Back, 0=Home): ")
+            song_name = ask("\n🎵 Enter Song Name (Enter: B=Back, 0=Home): ")
             data = requests.get(f"https://itunes.apple.com/search?term={song_name}&entity=song&limit=50").json()
             songs = data['results']
             
@@ -171,22 +173,22 @@ def main():
     while True:
         try:
             print("\n" + "="*45 + "\n🎵 Pro Music Downloader (Ultimate UI) 🎵\n" + "="*45)
-            print("1. Padam Search | 2. Paattu Search | 3. Exit")
+            print("1. Search by Movie/Album | 2. Search by Song | 3. Exit")
             choice = input("\nChoice (1, 2 or 3): ").strip()
             
             if choice == '3':
-                print("👋 Bye Bye!")
+                print("👋 Exiting App. Bye Bye!")
                 break
             elif choice == '1': search_movie()
             elif choice == '2': search_song()
-            else: print("❌ Thappana choice.")
+            else: print("❌ Invalid choice. Please try again.")
         except GoHome:
-            print("\n🏠 Home-kku thirumbugirom...")
+            print("\n🏠 Returning to Home Menu...")
         except KeyboardInterrupt:
-            print("\n👋 App close aagudhu...")
+            print("\n👋 Process interrupted. Exiting App...")
             break
         except Exception as e:
-            print(f"\n❌ Error. Home-kku pogirom.")
+            print(f"\n❌ An error occurred. Returning to Home Menu.")
             
 if __name__ == "__main__":
-    main()
+    main()            
