@@ -20,9 +20,10 @@ You need an Android phone with **Termux** and the **Termux:API** app installed.
    pkg install python ffmpeg termux-api -y
 
 2. Clone this repository and install Python requirements:
+   ```bash 
    pip install -r requirements.txt
 
 How to Run:
    Simply start the script using Python:
-
+   ```bash
    python music_bot.py
